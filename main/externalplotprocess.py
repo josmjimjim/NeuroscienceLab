@@ -19,8 +19,11 @@ class ExternalProcess(QWidget):
         self.option_list = kind
         self.interval = interval
         self.video = video
-        self.codec = 'cp' + str(cdll.kernel32.GetACP())
-
+        # Check codec if window try and mac os, unix except
+        try:
+            self.codec = 'cp' + str(cdll.kernel32.GetACP())
+        except:
+            self.codec = 'utf-8'
         # Set up Qprocces and Qthreadpool
         self.p = None  # Default empty value.
 
