@@ -22,19 +22,18 @@ class BuildModel(QStandardItemModel):
         self.loadCSVFile()
 
     def loadCSVFile(self):
-
         # Create DataFrame with time
         try:
             self.df = pd.DataFrame(data={'time':
-                self.file[self.emotions[1]].str.split(expand=True, pat="-")[0]}).astype(float).round(2)
+                self.file[self.emotions[0]].str.split(expand=True, pat="-")[0]}).astype(float).round(2)
 
-            for col in self.emotions[1::1]:  # Nombre de las columnas
+            for col in self.emotions:  # Nombre de las columnas
                 self.df[col] = self.file[col].str.split(expand=True, pat="\d-")[1].astype(float).round(2)
 
             nrows, ncols = self.df.shape
-            header = self.df.columns
+            header = self.df.columns.to_list()
 
-            for col in range(len(self.emotions)):
+            for col in range(len(header)):
                 items = [QStandardItem(str(item)) for item in self.df[header[col]].tolist()]
                 self.insertColumn(col, items)
 
