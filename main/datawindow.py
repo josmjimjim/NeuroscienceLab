@@ -34,7 +34,7 @@ class BuildModel(QStandardItemModel):
             nrows, ncols = self.df.shape
             header = self.df.columns
 
-            for col in range(len(emotions)):
+            for col in range(len(self.emotions)):
                 items = [QStandardItem(str(item)) for item in self.df[header[col]].tolist()]
                 self.insertColumn(col, items)
 
@@ -43,9 +43,9 @@ class BuildModel(QStandardItemModel):
 
             self.setHorizontalHeaderLabels(header)
 
-            del  items, header
+            del items, header
 
-        except Exception:
+        except:
             QMessageBox().warning(self,"", "Error, an exception occurred!",
                                           QMessageBox.Ok, QMessageBox.Ok)
 
@@ -94,7 +94,7 @@ class DisplayCSVData(QWidget):
 
         # Header tuple of csv file
         emotions = ('angry', 'disgust', 'fear', 'happy', 'sad',
-                    'surprise', 'neutral')
+                    'surprise', 'neutral', 'trigger')
         try:
             # Load csv file and delete the firs column if has Unnamed
             file_name = pd.read_csv(self.file, header=0)
@@ -103,51 +103,38 @@ class DisplayCSVData(QWidget):
             # Load csv file and delete the firs column
             file_name = pd.read_csv(self.file, delimiter=';',header=0)
 
-        shape = file_name.shape[1]
         header_csv = file_name.columns.to_list()
-        index = []
-        for j in (emotions + ('trigger',)):
+        index, col_head = [], []
+
+        # Check if emotions are in header
+        for j in emotions:
             index.extend([i for i in header_csv if j in i])
+            col_head.extend([j for i in header_csv if j in i])
         index = [x for x in index if x]
+        col_head = [x for x in col_head if x]
 
-        if self.trigger_sig :
-            if  shape >= 9 and ('trigger' in index[7]):
-                emotions = emotions + ('trigger',)
-                self.displayTable(file_name, emotions, index)
-            else:
-                self.displayTable(file_name, emotions, index)
-    
-
-        elif self.trigger_sig and file_name.shape[1] < 9:
-            QMessageBox().warning( self,"", "Error, the file does not have trigger!",
-                                          QMessageBox.Ok, QMessageBox.Ok)
+        # Check user trigger
+        if 'trigger' in index[-1] and not self.trigger_sig:
+            self.trigger_sig = True
+            QMessageBox().warning(self, "", "Error, the file has trigger!",
+                                  QMessageBox.Ok, QMessageBox.Ok)
+        elif 'trigger' not in index[-1] and self.trigger_sig:
             self.trigger_sig = False
-            self.displayTable(file_name, emotions, index)
+            QMessageBox().warning(self, "", "Error, the file does not have trigger!",
+                                  QMessageBox.Ok, QMessageBox.Ok)
 
+        # Call display function
+        self.displayTable(file_name, col_head, index)
 
-        elif not self.trigger_sig and shape == 9:
-            if ('trigger' in index[7]):
-                QMessageBox().warning( self,"", "Error, the file has trigger!",
-                                          QMessageBox.Ok, QMessageBox.Ok)
-                emotions = emotions + ('trigger',)
-                self.trigger_sig = True
-                self.displayTable(file_name, emotions, index)
-            else:
-                self.trigger_sig = False
-                self.displayTable(file_name, emotions, index)
-
-        else:
-            self.displayTable(file_name, emotions, index)
-
-    def displayTable (self, file_name, emotions, index):
-        file_name1 = file_name[index]
-        file_name1.columns = list(emotions)
-        file_name1 = file_name1.dropna(axis = 0)
+    def displayTable (self, file_name, col_head, index):
+        file_name = file_name[index]
+        file_name.columns = col_head
+        file_name = file_name.dropna(axis = 0)
         # Set up standard item model and table view.
         table_view = QTableView()
         # From QAbstractItemView.ExtendedSelection = 3
         table_view.SelectionMode(3)
-        self.model = BuildModel(file_name1, emotions, self.trigger_sig, self)
+        self.model = BuildModel(file_name, col_head, self.trigger_sig, self)
         table_view.setModel(self.model)
 
         accept_button = QPushButton('&Accept',self)
