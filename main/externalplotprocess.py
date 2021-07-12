@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import (QApplication, QWidget, QLabel, QVBoxLayout, QPlainT
 from plotresults import MdiSubwindowPlot, MdiSubwindowPlotSpecial
 from singleton import Singleton
 import re
+from ctypes import cdll
 
 
 class ExternalProcess(QWidget):
@@ -18,6 +19,7 @@ class ExternalProcess(QWidget):
         self.option_list = kind
         self.interval = interval
         self.video = video
+        self.codec = 'cp' + str(cdll.kernel32.GetACP())
 
         # Set up Qprocces and Qthreadpool
         self.p = None  # Default empty value.
@@ -105,7 +107,7 @@ class ExternalProcess(QWidget):
             self.p.readyReadStandardError.connect(self.handle_stderr)
             file = os.getcwd()
             file = file + '/main/videoprocess.py'
-            self.p.start("python3", [file, url, self.path, ctrl])
+            self.p.start("python", [file, url, self.path, ctrl])
             self.__remove_openocd_from_env()
 
     def handle_state(self, state):
@@ -119,13 +121,13 @@ class ExternalProcess(QWidget):
 
     def handle_stderr(self):
         data = self.p.readAllStandardError()
-        stderr = bytes(data).decode("utf8")
+        stderr = bytes(data).decode(self.codec)
         # Extract progress if it is in the data.
         self.messagevideo(stderr)
 
     def handle_stdout(self):
         data = self.p.readAllStandardOutput()
-        stdout = bytes(data).decode("utf8")
+        stdout = bytes(data).decode(self.codec)
         progress = self.simple_percent_parser(stdout)
         if progress:
             self.progress.setValue(progress)
