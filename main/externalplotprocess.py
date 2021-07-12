@@ -6,7 +6,6 @@ from singleton import Singleton
 import re
 from ctypes import cdll
 
-
 class ExternalProcess(QWidget):
 
     path_sender = pyqtSignal(str)
