@@ -1,0 +1,1 @@
+\zentornos\venv\Lib\site-packages

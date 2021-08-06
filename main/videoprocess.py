@@ -2,7 +2,9 @@ import cv2, sys, os
 from videobarplot import imageGenerator, overlayPlot
 import pandas as pd
 
+
 def VideoProcess(*args):
+    
 
     video = args[0]
     path = args[1]
@@ -91,7 +93,7 @@ def VideoProcess(*args):
             sys.stderr.write("Total complete: 80%\n")
 
         # ESC to quit
-        if (cv2.waitKey(1) & 0xFF == ord('q')) or not ret:
+        if (cv2.waitKey(0) & 0xFF == ord('q')) or not ret:
             break
 
     sys.stderr.write("Total complete: 100%\n")

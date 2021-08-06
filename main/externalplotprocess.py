@@ -1,5 +1,5 @@
 import sys, os, glob
-from PyQt5.QtCore import QProcess, pyqtSignal, QTimer
+from PyQt5.QtCore import QProcess, pyqtSignal, QTimer, QProcessEnvironment
 from PyQt5.QtWidgets import (QApplication, QWidget, QLabel, QVBoxLayout, QPlainTextEdit, QProgressBar)
 from plotresults import MdiSubwindowPlot, MdiSubwindowPlotSpecial
 from singleton import Singleton
@@ -101,8 +101,12 @@ class ExternalProcess(QWidget):
         if self.p is None:  # No process running.
             self.messagevideo("Executing process")
             self.p = QProcess()
+            env = QProcessEnvironment.systemEnvironment()
+            new_env = self.read_env()
+            env.insert("PYTHONPATH", new_env)
+            self.p.setProcessEnvironment(env)
             self.p.setProcessChannelMode(QProcess.MergedChannels)
-            self.__add_openocd_to_env()
+            #self.__add_openocd_to_env()
             self.p.finished.connect(self.process_finishedvideo)  # Clean up once complete.
             self.p.stateChanged.connect(self.handle_state)
             self.p.readyReadStandardOutput.connect(self.handle_stdout)
@@ -110,7 +114,19 @@ class ExternalProcess(QWidget):
             file = os.getcwd()
             file = file + '/main/videoprocess.py'
             self.p.start("python", [file, url, self.path, ctrl])
-            self.__remove_openocd_from_env()
+    @staticmethod
+    def read_env():
+        dir_path = os.getcwd()
+        try:
+            with open(dir_path + '/main/assets/venv.txt', 'r') as f:
+                venv_dir = f.read()
+                f.close()
+        except Exception:
+            win = os.path.normpath('/main/assets/venv.txt')
+            with open(dir_path + win, 'r') as f:
+                venv_dir = f.read()
+                f.close()
+        return  venv_dir
 
     def handle_state(self, state):
         states = {
@@ -134,15 +150,6 @@ class ExternalProcess(QWidget):
         if progress:
             self.progress.setValue(progress)
         self.messagevideo(stdout)
-
-    def __add_openocd_to_env(self):
-        self.__oldEnv = os.environ["PATH"]
-        file = os.getcwd()
-        file = file + '/venv/bin;'
-        os.environ["PATH"] = file + self.__oldEnv
-
-    def __remove_openocd_from_env(self):
-        os.environ["PATH"] = self.__oldEnv
 
     def process_finishedvideo(self):
         self.messagevideo("Process finished.")
@@ -172,7 +179,6 @@ class ExternalProcess(QWidget):
 
     def process_finishednotvideo(self):
         self.messagevideo("Process finished. \n Not video detected!! \n System exit()")
-
 
 
 if __name__ == '__main__':

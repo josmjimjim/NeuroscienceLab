@@ -102,7 +102,6 @@ class MainWindow(QMainWindow):
             obj = MdiSubwindowPlot(i,self.background)
             self.background.addSubWindow(obj)
             obj.show()
-            del obj
 
         if self.sig:
             player_window = MediaPlayer(path+'output.avi', self)
