@@ -61,6 +61,7 @@ class MainWindow(QMainWindow):
         '''
         Open the window file directory when button is clicked
         '''
+        Singleton()
         self.directory = DisplayFileFinder()
         self.directory.accept_signal.connect(self.dataView)
         self.directory.show()
