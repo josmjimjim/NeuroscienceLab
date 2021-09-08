@@ -1,6 +1,6 @@
 import sys, glob
 from PyQt5.QtWidgets import QApplication, QMainWindow, QAction
-from PyQt5.QtCore import pyqtSlot, QThreadPool
+from PyQt5.QtCore import pyqtSlot, QThreadPool, Qt
 from background import Background
 from filedirectory import DisplayFileFinder
 from datawindow import DisplayCSVData
@@ -97,16 +97,22 @@ class MainWindow(QMainWindow):
         self.threadpool.start(worker)
 
     def subwindowAdd(self, path):
+        self.subwindowClose()
         image_list = glob.glob(path+'/*.png')
         for i in image_list:
             obj = MdiSubwindowPlot(i,self.background)
+            obj.setAttribute(Qt.WA_DeleteOnClose)
             self.background.addSubWindow(obj)
             obj.show()
 
         if self.sig:
-            player_window = MediaPlayer(path+'output.avi', self)
+            url = Singleton().getUrl()
+            player_window = MediaPlayer(url, self)
             self.background.addSubWindow(player_window)
             player_window.show()
+
+    def subwindowClose(self):
+        self.background.closeAllSubWindows()
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

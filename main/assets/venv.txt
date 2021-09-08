@@ -1,1 +1,1 @@
-\zentornos\venv\Lib\site-packages
+/Desktop/venv/bin
